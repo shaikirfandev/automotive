@@ -109,7 +109,7 @@ class CircuitBreaker:
             self._record_success()
             return result
         except self._excluded_exceptions:
-            self._record_success()
+            # Excluded exceptions are neutral - don't count as success or failure
             raise
         except Exception:
             self._record_failure()

@@ -30,14 +30,18 @@ class RateLimiter:
         pipe.zremrangebyscore(pipe_key, 0, window_start)
         # Count current entries
         pipe.zcard(pipe_key)
-        # Add current request
-        pipe.zadd(pipe_key, {str(now): now})
-        # Set TTL
-        pipe.expire(pipe_key, self._window_seconds)
         results = await pipe.execute()
 
         current_count = results[1]
-        return current_count < self._max_requests
+        if current_count >= self._max_requests:
+            return False
+
+        # Only add entry if under limit
+        pipe2 = self._redis.pipeline()
+        pipe2.zadd(pipe_key, {str(now): now})
+        pipe2.expire(pipe_key, self._window_seconds)
+        await pipe2.execute()
+        return True
 
     async def get_remaining(self, key: str) -> int:
         """Get remaining requests in current window."""

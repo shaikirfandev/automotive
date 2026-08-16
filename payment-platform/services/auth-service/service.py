@@ -19,8 +19,13 @@ class AuthServiceHandler:
     def __init__(self, db_session: Any = None, redis_client: Any = None, settings: Any = None):
         self._db = db_session
         self._redis = redis_client
-        self._secret_key = "change-me-in-production"  # From settings in prod
-        self._algorithm = "HS256"
+        if settings:
+            self._secret_key = settings.jwt_secret_key
+            self._algorithm = settings.jwt_algorithm
+        else:
+            from services.auth_service.config import settings as default_settings
+            self._secret_key = default_settings.jwt_secret_key
+            self._algorithm = default_settings.jwt_algorithm
 
     async def register(self, request: RegisterRequest) -> LoginResponse:
         """Register new user and return tokens."""
