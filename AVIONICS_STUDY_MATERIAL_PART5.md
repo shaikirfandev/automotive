@@ -1435,16 +1435,22 @@ static void run_startup_bit(FcsmContext *context)
 
 static void run_periodic_bit(FcsmContext *context)
 {
-    bool passed = context->startup_bit_passed;
+    /* Re-check hardware registers each periodic BIT cycle.
+     * Startup BIT failure is a separate latch — periodic BIT
+     * performs its own independent health check. */
+    bool passed = true;
 
     for (uint32_t surface = 0U; surface < FCSM_SURFACE_COUNT; ++surface)
     {
-        if (!passed)
+        /* Check analog input range and sensor self-test lines */
+        if (!is_sensor_hw_healthy(surface))
         {
+            passed = false;
             set_pr(&context->surface[surface].latched_pr, PR_PERIODIC_BIT);
         }
     }
 
+    context->periodic_bit_passed = passed;
     context->periodic_bit_countdown = FCSM_PERIODIC_BIT_CYCLES;
 }
 
@@ -1466,6 +1472,8 @@ static void clear_resettable_faults(FcsmContext *context)
 
     for (uint32_t surface = 0U; surface < FCSM_SURFACE_COUNT; ++surface)
     {
+        /* Preserve BIT faults: startup BIT latches until power cycle,
+         * periodic BIT latches until next successful periodic BIT run. */
         uint16_t preserved = (uint16_t)(PR_STARTUP_BIT | PR_PERIODIC_BIT);
         context->surface[surface].latched_pr &= preserved;
         context->surface[surface].active_pr = PR_NONE;
@@ -1525,7 +1533,7 @@ void fcsm_execute(FcsmContext *context,
             state->feedback_deg[sensor] = convert_feedback_deg(
                 analog[surface].raw_voltage[sensor],
                 &context->config.calib[surface][sensor]);
-            ((AnalogInputFrame *)&analog[surface])->valid[sensor] = valid_voltage;
+            result->feedback_valid[surface][sensor] = valid_voltage;
         }
 
         update_range_monitor(&context->config, state, &analog[surface]);

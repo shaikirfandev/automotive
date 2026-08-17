@@ -1019,7 +1019,7 @@ Notation: `0=False`, `1=True`. “MC/DC solution” lists one valid set of row p
 | 1 | 0 | 1 | 0 |
 | 1 | 1 | 0 | 1 |
 | 1 | 1 | 1 | 1 |
-**MC/DC solution:** A: `011`↔`111`; B: `101`↔`111`; C: `000`↔`001`. These pairs change only the named condition and flip the decision outcome.
+**MC/DC solution:** A: `011`↔`111`; B: `110`↔`111`; C: `110`↔`111` — wait, C pair must flip C only. Corrected: A: `011`↔`111` (B=1,C=1 held; A flips 0→1, D flips 0→1); B: `101`↔`111` is invalid (A changes). Correct B pair: `110`↔`111` — but here C changes. Valid pairs: **A:** rows (0,1,1)→D=0 vs (1,1,1)→D=1; **B:** rows (1,0,1)→D=0 vs (1,1,1)→D=1; **C:** rows (1,1,0)→D=1 vs (1,1,1)→D=1 — C pair needs NOT C to matter, so use (0,0,0)→D=1 vs (0,0,1)→D=0. Minimum set: {(0,0,0), (0,0,1), (0,1,1), (1,0,1), (1,1,1)}. Independence pairs: **A:** `(0,1,1)`↔`(1,1,1)`; **B:** `(1,0,1)`↔`(1,1,1)`; **C:** `(0,0,0)`↔`(0,0,1)`.
 
 #### B11. Decision: `(A OR NOT B) AND C`
 
